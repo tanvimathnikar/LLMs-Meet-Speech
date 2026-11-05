@@ -1,6 +1,14 @@
 from pathlib import Path
 from uuid import uuid4
-from app.services.openai_client import client, LLM_MODEL, TRANSCRIPTION_MODEL, TTS_MODEL, TTS_VOICE
+
+from google.genai import types
+from app.services.gemini_client import (
+    client,
+    LLM_MODEL,
+    TRANSCRIPTION_MODEL,
+    TTS_MODEL,
+    TTS_VOICE,
+)
 
 AUDIO_DIR = Path("data/audio")
 AUDIO_DIR.mkdir(parents=True, exist_ok=True)
@@ -11,26 +19,61 @@ SYSTEM_PROMPT = (
     "Avoid unnecessary markdown and tables."
 )
 
+
 def transcribe_audio(audio_path: Path) -> str:
-    with audio_path.open("rb") as f:
-        result = client.audio.transcriptions.create(model=TRANSCRIPTION_MODEL, file=f)
-    return result.text.strip()
+    audio_part = types.Part.from_bytes(
+        data=audio_path.read_bytes(),
+        mime_type="audio/webm",
+    )
+
+    response = client.models.generate_content(
+        model=TRANSCRIPTION_MODEL,
+        contents=[
+            audio_part,
+            "Transcribe the speech accurately. Return only the spoken words.",
+        ],
+    )
+
+    if not response.text:
+        raise RuntimeError("Gemini could not transcribe the audio.")
+
+    return response.text.strip()
+
 
 def answer_from_text(user_text: str) -> str:
-    response = client.responses.create(
+    response = client.models.generate_content(
         model=LLM_MODEL,
-        instructions=SYSTEM_PROMPT,
-        input=user_text,
+        contents=user_text,
+        config=types.GenerateContentConfig(
+            system_instruction=SYSTEM_PROMPT,
+        ),
     )
-    return response.output_text.strip()
+
+    if not response.text:
+        raise RuntimeError("Gemini could not generate an answer.")
+
+    return response.text.strip()
+
 
 def generate_speech(text: str) -> Path:
-    output = AUDIO_DIR / f"response_{uuid4().hex}.mp3"
-    with client.audio.speech.with_streaming_response.create(
+    response = client.models.generate_content(
         model=TTS_MODEL,
-        voice=TTS_VOICE,
-        input=text,
-        response_format="mp3",
-    ) as response:
-        response.stream_to_file(output)
+        contents=text,
+        config=types.GenerateContentConfig(
+            response_modalities=["AUDIO"],
+            speech_config=types.SpeechConfig(
+                voice_config=types.VoiceConfig(
+                    prebuilt_voice_config=types.PrebuiltVoiceConfig(
+                        voice_name=TTS_VOICE
+                    )
+                )
+            ),
+        ),
+    )
+
+    audio_data = response.candidates[0].content.parts[0].inline_data.data
+
+    output = AUDIO_DIR / f"response_{uuid4().hex}.wav"
+    output.write_bytes(audio_data)
+
     return output

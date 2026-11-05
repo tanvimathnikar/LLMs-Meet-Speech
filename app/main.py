@@ -51,4 +51,4 @@ def get_audio(filename: str):
     path = Path("data/audio") / filename
     if not path.exists():
         raise HTTPException(status_code=404, detail="Audio not found.")
-    return FileResponse(path, media_type="audio/mpeg", filename=filename)
+    return FileResponse(path, media_type="audio/wav", filename=filename)

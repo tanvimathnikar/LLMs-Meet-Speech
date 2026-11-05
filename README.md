@@ -1,45 +1,85 @@
-# AI Voice Assistant — Speech → LLM → Speech
+## LLMs Meet Speech – Gemini AI Voice Assistant
 
-A beginner-friendly complete project based on the **LLMs Meet Speech** concept.
+A voice-enabled AI assistant built with **FastAPI and Google Gemini**. It accepts text or voice input, generates AI responses, and converts responses into speech.
 
-## What it does
-- Text mode: Text → LLM → Text-to-Speech → Play/Download MP3
-- Voice mode: Microphone → Speech-to-Text → LLM → Text-to-Speech → Play/Download MP3
+## Features
 
-## Run locally
+- Text-based AI conversations
+- Voice recording and audio input
+- Speech-to-text transcription using Gemini
+- AI-generated responses using Gemini
+- Text-to-speech audio generation
+- FastAPI backend with API documentation
+
+## Tech Stack
+
+- Python
+- FastAPI
+- Google Gemini API (`google-genai`)
+- HTML, CSS, JavaScript
+- Uvicorn
+
+## Project Setup
+
+### 1. Clone the repository
+
 ```bash
-python -m venv .venv
-source .venv/bin/activate
+git clone https://github.com/tanvimathnikar/LLMs-Meet-Speech.git
+cd LLMs-Meet-Speech
+```
+
+### 2. Create and activate a virtual environment
+
+```bash
+python -m venv venv
+source venv/Scripts/activate
+```
+
+### 3. Install dependencies
+
+```bash
 pip install -r requirements.txt
 ```
-Copy `.env.example` to `.env` and add your API key, then:
+
+### 4. Configure your API key
+
+Create a `.env` file in the project root:
+
+```env
+GEMINI_API_KEY=your_gemini_api_key
+```
+
+Never upload your `.env` file or share your API key publicly.
+
+### 5. Start the application
+
 ```bash
 uvicorn app.main:app --reload
 ```
-Open http://127.0.0.1:8000
 
-## Docker
-```bash
-docker build -t ai-voice-assistant .
-docker run --rm -p 8000:8000 --env-file .env ai-voice-assistant
-```
+Open the application at:
 
-## Demo
-Type: "Explain Generative AI to a first-year engineering student."
-Click Generate Voice Response.
+`http://127.0.0.1:8000`
 
-Then try the microphone:
-"What is RAG and why is it useful?"
+API documentation:
 
-## Learning flow
-Speech → STT → LLM → TTS → Speech
+`http://127.0.0.1:8000/docs`
 
-The project deliberately keeps the three AI components separate so students can understand the pipeline.
+## API Endpoints
 
-## Extensions
-- RAG knowledge base
-- conversation history
-- multiple languages
-- selectable voices
-- tool calling
-- streaming
+| Endpoint | Purpose |
+|---|---|
+| `/api/text` | Text-based interaction |
+| `/api/voice` | Voice-based interaction |
+| `/api/audio/{filename}` | Retrieve generated audio |
+
+## Acknowledgement
+
+This project builds upon the original [LLMs Meet Speech](https://github.com/thenitinsingh/LLMs-Meet-Speech) repository, with modifications including migration to Google's Gemini API.
+
+## Future Improvements
+
+- Improved error handling
+- Better conversation history
+- Deployment and production optimization
+- Enhanced user interface
